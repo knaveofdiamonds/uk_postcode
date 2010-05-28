@@ -14,6 +14,13 @@ class UKPostcode
 
   attr_reader :raw
 
+  # Returns a new UKPostcode or BritishForcesPostcode as appropriate,
+  # given a postcode as a string.
+  #
+  def self.parse(postcode_as_string)
+    postcode_as_string =~ /^\s*BFP[O0]/i ? BritishForcesPostcode.new(postcode_as_string) : self.new(postcode_as_string)
+  end
+
   # Initialise a new UKPostcode instance from the given postcode string
   #
   def initialize(postcode_as_string)
@@ -84,16 +91,7 @@ class UKPostcode
     "<#{self.class.to_s} #{raw}>"
   end
 
-private
-  def parts
-    if @matched
-      @parts
-    else
-      @matched = true
-      matches = raw.upcase.match(MATCH) || []
-      @parts = (1..4).map{ |i| matches[i] }
-    end
-  end
+protected
 
   def letters(s)
     s && s.tr("10", "IO")
@@ -103,5 +101,54 @@ private
     # '£' needs to be dealt with separately because it doesn't work
     # with #tr and utf-8.
     s && s.tr('IO!"$%^&*()', "10124567890").gsub(/£/,'3')
+  end
+
+private
+
+  def parts
+    if @matched
+      @parts
+    else
+      @matched = true
+      matches = raw.upcase.match(MATCH) || []
+      @parts = (1..4).map{ |i| matches[i] }
+    end
+  end
+end
+
+# A BFPO postcode.
+#
+# BFPO postcodes have a format like BFPO 43.
+class BritishForcesPostcode < UKPostcode
+  MATCH = /\A
+           \s*
+           (BFP[O0])\s*
+           (c\/o)?\s*
+           ([0-9]{1,4})\s*
+           \Z/xi
+
+  # Returns 'BFPO' or nil
+  #
+  def outcode
+    return @outcode if defined? @outcode
+    split_raw_postcode
+    @outcode
+  end
+
+  # Returns the BFPO number
+  #
+  def incode
+    return @incode if defined? @incode
+    split_raw_postcode
+    @incode
+  end
+
+private
+
+  def split_raw_postcode
+    matches = raw.match(MATCH) || []
+    @outcode = matches[1] && "BFPO"
+    @incode = [matches[2], matches[3]].compact.join(" ").downcase
+    @incode = nil if @incode == ''
   end
 end

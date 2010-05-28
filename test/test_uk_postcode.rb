@@ -259,4 +259,72 @@ class UKPostcodeTest < Test::Unit::TestCase
       end
     end
   end
+
+  context "parsing a uk postcode" do
+    ["BFPO", "  BFPO", "BFP0", "bfpo"].each do |bfpo_string|
+      should "return a BritishForcesPostCode if postcode starts with '#{bfpo_string}'" do
+        assert_instance_of BritishForcesPostcode, UKPostcode.parse("BFPO 3")
+      end
+    end
+
+    should "return a UKPostcode if not a British Forces Postcode" do
+      assert_instance_of UKPostcode, UKPostcode.parse("foo")
+    end
+  end
+end
+
+###
+
+class BritishForcesPostcodeTest < Test::Unit::TestCase
+  should "have an outcode of 'BFPO'" do
+    assert_equal 'BFPO', BritishForcesPostcode.new("BFPO 3").outcode
+  end
+
+  should "have the BFPO number as the incode" do
+    assert_equal '3', BritishForcesPostcode.new("BFPO 3").incode
+  end
+
+  should "have the BFPO number as the incode, when number includes 'c/o'" do
+    assert_equal 'c/o 3', BritishForcesPostcode.new("BFPO c/o 3").incode
+  end
+
+  should "have a nil incode if the number is missing" do
+    assert_nil BritishForcesPostcode.new("BFPO").incode
+  end
+
+  should "have a nil area" do
+    assert_nil BritishForcesPostcode.new("BFPO 3").area
+  end
+
+  should "have a nil district" do
+    assert_nil BritishForcesPostcode.new("BFPO 3").district
+  end
+
+  should "have a nil sector" do
+    assert_nil BritishForcesPostcode.new("BFPO 3").sector
+  end
+
+  should "have a nil unit" do
+    assert_nil BritishForcesPostcode.new("BFPO 3").unit
+  end
+
+  should "be full if it includes both BFPO and number" do
+    assert BritishForcesPostcode.new("BFPO 3").full?
+  end
+
+  should "not be full if it lacks number" do
+    assert !BritishForcesPostcode.new("BFPO").full?
+  end
+
+  should "be valid if it starts with BFPO" do
+    assert BritishForcesPostcode.new("BFPO 3").valid?
+  end
+
+  should "not be valid if it doesn't start with BFPO" do
+    assert !BritishForcesPostcode.new("foo").valid?
+  end
+
+  should "return a normalised postcode" do
+    assert_equal "BFPO c/o 3", BritishForcesPostcode.new("  bfpo  C/O  3 ").norm
+  end
 end
