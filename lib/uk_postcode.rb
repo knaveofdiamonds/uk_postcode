@@ -1,12 +1,13 @@
+# -*- coding: utf-8 -*-
 class UKPostcode
   MATCH = /\A
            \s*
-           ( [A-PR-UWYZ01][A-Z01]? )       # area
-           ( [0-9IO][0-9A-HJKMNPR-YIO]? )  # district
+           ( [A-PR-UWYZ01][A-Z01]? )    # area
+           ( (?:[0-9IO!\"$%^&*\(\)]|£)(?:[0-9A-HJKMNPR-YIO!\"$%^&*\(\)]|£)? )  # district
            (?:
              \s*
-             ( [0-9IO] )                   # sector
-             ( [ABD-HJLNPQ-Z10]{2} )       # unit
+             ( [0-9IO!\"$%^&*\(\)]|£ )  # sector
+             ( [ABD-HJLNPQ-Z10]{2} )    # unit
                                      )?
            \s*
            \Z/x
@@ -99,6 +100,8 @@ private
   end
 
   def digits(s)
-    s && s.tr("IO", "10")
+    # '£' needs to be dealt with separately because it doesn't work
+    # with #tr and utf-8.
+    s && s.tr('IO!"$%^&*()', "10124567890").gsub(/£/,'3')
   end
 end

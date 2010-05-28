@@ -1,4 +1,4 @@
-# -*- coding: undecided -*-
+# -*- coding: utf-8 -*-
 $:.unshift File.join(File.dirname(__FILE__), "..", "lib")
 require "test/unit"
 require "shoulda"
@@ -236,6 +236,26 @@ class UKPostcodeTest < Test::Unit::TestCase
 
       should "normalise to letters" do
         assert_equal "OX1 0AB", @postcode.norm
+      end
+    end
+  end
+
+  context "when over-eager use of the shift key results in special characters instead of digits" do
+    context "in a full postcode" do
+      setup do 
+        @postcode = UKPostcode.new("OX! £AB")
+      end
+
+      should "be valid" do
+        assert @postcode.valid?
+      end
+
+      should "be full" do
+        assert @postcode.full?
+      end
+
+      should "normalise to digits" do
+        assert_equal "OX1 3AB", @postcode.norm
       end
     end
   end
